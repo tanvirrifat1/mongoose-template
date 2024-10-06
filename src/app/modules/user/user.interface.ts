@@ -1,4 +1,4 @@
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { USER_ROLES } from '../../../enums/user';
 
 export type IUser = {
@@ -6,6 +6,8 @@ export type IUser = {
   role: USER_ROLES;
   contact: string;
   email: string;
+  type?: string;
+  appId?: string;
   password: string;
   location: string;
   profile?: string;

@@ -13,34 +13,90 @@ import { userSearchAbleField } from './user.constant';
 
 const createUserToDB = async (payload: Partial<IUser>): Promise<IUser> => {
   //set role
-  payload.role = USER_ROLES.USER;
-  const createUser = await User.create(payload);
-  if (!createUser) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'Failed to create user');
+  // payload.role = USER_ROLES.USER;
+
+  const ExistEmail = await User.findOne({ email: payload.email });
+
+  const ExistAppId = await User.findOne({ appId: payload.appId });
+
+  if (ExistEmail) {
+    throw new ApiError(StatusCodes.BAD_GATEWAY, 'Email adready exist');
   }
 
-  //send email
-  const otp = generateOTP();
-  const values = {
-    name: createUser.name,
-    otp: otp,
-    email: createUser.email!,
-  };
-  const createAccountTemplate = emailTemplate.createAccount(values);
-  emailHelper.sendEmail(createAccountTemplate);
+  if (ExistAppId) {
+    throw new ApiError(StatusCodes.BAD_GATEWAY, 'AppId adready exist');
+  }
 
-  //save to DB
-  const authentication = {
-    oneTimeCode: otp,
-    expireAt: new Date(Date.now() + 3 * 60000),
-  };
-  await User.findOneAndUpdate(
-    { _id: createUser._id },
-    { $set: { authentication } }
-  );
+  const { type, appId } = payload;
 
-  return createUser;
+  if (type === 'social') {
+    const user = await User.findOne({ appId });
+
+    if (user) {
+      return user;
+    }
+    const createUser = await User.create(payload);
+    if (!createUser) {
+      throw new ApiError(StatusCodes.BAD_REQUEST, 'Failed to create user');
+    }
+
+    //send email
+    const otp = generateOTP();
+    const values = {
+      name: createUser.name,
+      otp: otp,
+      email: createUser.email!,
+    };
+    const createAccountTemplate = emailTemplate.createAccount(values);
+    emailHelper.sendEmail(createAccountTemplate);
+
+    //save to DB
+    const authentication = {
+      oneTimeCode: otp,
+      expireAt: new Date(Date.now() + 3 * 60000),
+    };
+    await User.findOneAndUpdate(
+      { _id: createUser._id },
+      { $set: { authentication } }
+    );
+
+    return createUser;
+  }
+  const result = await User.create(payload);
+  return result;
 };
+
+// const createUserToDB = async (payload: Partial<IUser>): Promise<IUser> => {
+//   //set role
+//   // payload.role = USER_ROLES.USER;
+
+//   const createUser = await User.create(payload);
+//   if (!createUser) {
+//     throw new ApiError(StatusCodes.BAD_REQUEST, 'Failed to create user');
+//   }
+
+//   //send email
+//   const otp = generateOTP();
+//   const values = {
+//     name: createUser.name,
+//     otp: otp,
+//     email: createUser.email!,
+//   };
+//   const createAccountTemplate = emailTemplate.createAccount(values);
+//   emailHelper.sendEmail(createAccountTemplate);
+
+//   //save to DB
+//   const authentication = {
+//     oneTimeCode: otp,
+//     expireAt: new Date(Date.now() + 3 * 60000),
+//   };
+//   await User.findOneAndUpdate(
+//     { _id: createUser._id },
+//     { $set: { authentication } }
+//   );
+
+//   return createUser;
+// };
 
 const getUserProfileFromDB = async (
   user: JwtPayload
