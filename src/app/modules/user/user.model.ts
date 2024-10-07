@@ -8,13 +8,18 @@ import { IUser, UserModal } from './user.interface';
 
 const userSchema = new Schema<IUser, UserModal>(
   {
-    name: {
+    fistName: {
+      type: String,
+      required: false,
+    },
+    lastName: {
       type: String,
       required: false,
     },
     role: {
       type: String,
-      enum: Object.values(USER_ROLES),
+      enum: ['admin', 'user', 'service_provider', 'employer'],
+      default: 'user',
       required: false,
     },
     email: {
@@ -38,8 +43,15 @@ const userSchema = new Schema<IUser, UserModal>(
       minlength: 8,
     },
     location: {
-      type: String,
-      required: false,
+      type: {
+        type: String,
+        enum: ['Point'],
+        required: false,
+      },
+      coordinates: {
+        type: [Number],
+        required: false,
+      },
     },
     profile: {
       type: String,
@@ -74,6 +86,8 @@ const userSchema = new Schema<IUser, UserModal>(
   },
   { timestamps: true }
 );
+
+userSchema.index({ location: '2dsphere' });
 
 //exist user check
 userSchema.statics.isExistUserById = async (id: string) => {

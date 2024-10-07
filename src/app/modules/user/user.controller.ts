@@ -65,21 +65,51 @@ const getAllUserFromDb = catchAsync(async (req, res) => {
   });
 });
 
-const deleteUserFromDb = catchAsync(async (req, res) => {
-  const result = await UserService.deleteUserFromDb(req.params.id);
+const updateUserLocation = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const id = req.params.id;
+    const { coordinates } = req.body;
 
-  sendResponse(res, {
-    statusCode: StatusCodes.OK,
-    success: true,
-    message: 'User delete successfully',
-    data: result,
-  });
-});
+    const result = await UserService.updateUserLocation(id, coordinates);
+
+    sendResponse(res, {
+      success: true,
+      statusCode: StatusCodes.OK,
+      message: 'User location updated successfully',
+      data: result,
+    });
+  }
+);
+
+const findUsersByLocations = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { longitude, latitude, maxDistance } = req.query;
+
+    // Ensure coordinates are numbers
+    const coordinates: [number, number] = [
+      parseFloat(longitude as string),
+      parseFloat(latitude as string),
+    ];
+
+    const result = await UserService.findUsersByLocation(
+      coordinates,
+      parseFloat(maxDistance as string)
+    );
+
+    sendResponse(res, {
+      success: true,
+      statusCode: StatusCodes.OK,
+      message: 'Find user location successfully',
+      data: result,
+    });
+  }
+);
 
 export const UserController = {
   createUser,
   getUserProfile,
   updateProfile,
   getAllUserFromDb,
-  deleteUserFromDb,
+  updateUserLocation,
+  findUsersByLocations,
 };

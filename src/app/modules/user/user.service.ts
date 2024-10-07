@@ -27,6 +27,16 @@ const createUserToDB = async (payload: Partial<IUser>): Promise<IUser> => {
     throw new ApiError(StatusCodes.BAD_GATEWAY, 'AppId adready exist');
   }
 
+  // Set default location if not provided
+  const defaultLocation = {
+    type: 'Point',
+    coordinates: [0, 0],
+  };
+
+  if (!payload.location) {
+    payload.location = defaultLocation;
+  }
+
   const { type, appId } = payload;
 
   if (type === 'social') {
@@ -43,10 +53,12 @@ const createUserToDB = async (payload: Partial<IUser>): Promise<IUser> => {
     //send email
     const otp = generateOTP();
     const values = {
-      name: createUser.name,
+      // name: createUser.firstName + '' + createUser.lastName,
+      name: createUser.fistName,
       otp: otp,
       email: createUser.email!,
     };
+
     const createAccountTemplate = emailTemplate.createAccount(values);
     emailHelper.sendEmail(createAccountTemplate);
 
@@ -65,6 +77,62 @@ const createUserToDB = async (payload: Partial<IUser>): Promise<IUser> => {
   const result = await User.create(payload);
   return result;
 };
+
+const updateUserLocation = async (
+  id: string,
+  coordinates: number[]
+): Promise<IUser | null> => {
+  const updatedUser = await User.findByIdAndUpdate(
+    id,
+    {
+      $set: {
+        'location.coordinates': coordinates,
+      },
+    },
+    { new: true }
+  );
+  console.log(updatedUser);
+  if (!updatedUser) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'Failed to update location');
+  }
+
+  return updatedUser;
+};
+
+const findUsersByLocation = async (
+  coordinates: [number, number],
+  maxDistance: number
+): Promise<IUser[]> => {
+  const users = await User.find({
+    location: {
+      $near: {
+        $geometry: {
+          type: 'Point',
+          coordinates: coordinates,
+        },
+        $maxDistance: maxDistance || 5000,
+      },
+    },
+  });
+  return users;
+};
+
+// const updateUserLocation = async (
+//   id: string,
+//   location: { type: string; coordinates: number[] }
+// ): Promise<IUser | null> => {
+//   const updatedUser = await User.findByIdAndUpdate(
+//     id,
+//     { $set: { location } },
+//     { new: true } // Return the updated document
+//   );
+
+//   if (!updatedUser) {
+//     throw new ApiError(StatusCodes.BAD_REQUEST, 'Failed to update location');
+//   }
+
+//   return updatedUser;
+// };
 
 // const createUserToDB = async (payload: Partial<IUser>): Promise<IUser> => {
 //   //set role
@@ -144,16 +212,11 @@ const getAllUserFromDb = async (query: Record<string, unknown>) => {
   return result;
 };
 
-const deleteUserFromDb = async (id: string) => {
-  const result = await User.findByIdAndDelete(id);
-
-  return result;
-};
-
 export const UserService = {
   createUserToDB,
   getUserProfileFromDB,
   updateProfileToDB,
   getAllUserFromDb,
-  deleteUserFromDb,
+  updateUserLocation,
+  findUsersByLocation,
 };

@@ -13,13 +13,10 @@ router.get(
   UserController.getUserProfile
 );
 
+router.get('/get-by-location', UserController.findUsersByLocations);
 router.get('/', UserController.getAllUserFromDb);
 
-router.delete(
-  '/:id',
-  auth(USER_ROLES.ADMIN, USER_ROLES.USER),
-  UserController.deleteUserFromDb
-);
+router.patch('/update-location/:id', UserController.updateUserLocation);
 
 router
   .route('/')
