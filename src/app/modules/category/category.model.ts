@@ -10,6 +10,10 @@ const categorySchema = new Schema<ICategory>(
       required: true,
       unique: true,
     },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );
