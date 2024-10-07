@@ -2,15 +2,15 @@ import { Model, Types } from 'mongoose';
 import { USER_ROLES } from '../../../enums/user';
 
 export type IUser = {
-  fistName: string;
+  firstName: string;
   lastName: string;
-  role: 'admin' | 'user' | 'service_provider' | 'employer';
+  role: 'admin' | 'service_provider' | 'employer';
   contact: string;
   email: string;
   type?: string;
   appId?: string;
   password: string;
-  location: {
+  location?: {
     type: string;
     coordinates: number[];
   };

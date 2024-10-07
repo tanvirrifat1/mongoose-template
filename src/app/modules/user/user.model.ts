@@ -8,7 +8,7 @@ import { IUser, UserModal } from './user.interface';
 
 const userSchema = new Schema<IUser, UserModal>(
   {
-    fistName: {
+    firstName: {
       type: String,
       required: false,
     },
@@ -18,8 +18,7 @@ const userSchema = new Schema<IUser, UserModal>(
     },
     role: {
       type: String,
-      enum: ['admin', 'user', 'service_provider', 'employer'],
-      default: 'user',
+      enum: ['admin', 'service_provider', 'employer'],
       required: false,
     },
     email: {

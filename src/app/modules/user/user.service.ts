@@ -30,7 +30,7 @@ const createUserToDB = async (payload: Partial<IUser>): Promise<IUser> => {
   // Set default location if not provided
   const defaultLocation = {
     type: 'Point',
-    coordinates: [0, 0],
+    coordinates: [-122.4194, 37.7749],
   };
 
   if (!payload.location) {
@@ -53,13 +53,13 @@ const createUserToDB = async (payload: Partial<IUser>): Promise<IUser> => {
     //send email
     const otp = generateOTP();
     const values = {
-      // name: createUser.firstName + '' + createUser.lastName,
-      name: createUser.fistName,
+      name: createUser.firstName + '' + createUser.lastName,
       otp: otp,
       email: createUser.email!,
     };
 
     const createAccountTemplate = emailTemplate.createAccount(values);
+
     emailHelper.sendEmail(createAccountTemplate);
 
     //save to DB
@@ -75,6 +75,27 @@ const createUserToDB = async (payload: Partial<IUser>): Promise<IUser> => {
     return createUser;
   }
   const result = await User.create(payload);
+
+  const otp = generateOTP();
+  const values = {
+    name: result.firstName + '' + result.lastName,
+    otp: otp,
+    email: result.email!,
+  };
+
+  const createAccountTemplate = emailTemplate.createAccount(values);
+
+  emailHelper.sendEmail(createAccountTemplate);
+  //save to DB
+  const authentication = {
+    oneTimeCode: otp,
+    expireAt: new Date(Date.now() + 3 * 60000),
+  };
+  await User.findOneAndUpdate(
+    { _id: result._id },
+    { $set: { authentication } }
+  );
+
   return result;
 };
 
@@ -146,7 +167,7 @@ const findUsersByLocation = async (
 //   //send email
 //   const otp = generateOTP();
 //   const values = {
-//     name: createUser.name,
+//     name: createUser.firstName + '' + createUser.lastName,
 //     otp: otp,
 //     email: createUser.email!,
 //   };
