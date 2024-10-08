@@ -65,3 +65,57 @@ class QueryBuilder<T> {
 }
 
 export default QueryBuilder;
+
+// const getAllCategoryFromDB = async (
+//   query: Record<string, unknown>
+// ): Promise<ICategory[]> => {
+//   console.log(query);
+//   const queryObj = { ...query };
+//   let searchTerm = '';
+//   const searchableFields = ['name'];
+//   if (query?.searchTerm) {
+//     searchTerm = query.searchTerm as string;
+//   }
+//   console.log('object');
+//   const searchQuery = Category.find({
+//     $or: searchableFields.map(field => ({
+//       [field]: {
+//         $regex: searchTerm,
+//         $options: 'i',
+//       },
+//     })),
+//   });
+
+//   //exclude field
+//   const excludeFields = ['searchTerm', 'sort', 'limit', 'page'];
+//   excludeFields.forEach(el => delete queryObj[el]);
+
+//   const filterQuery = searchQuery.find(queryObj);
+
+//   //sorting
+//   let sort = '-createdAt';
+//   if (query.sort) {
+//     sort = query.sort as string;
+//   }
+//   const sortQuery = filterQuery.sort(sort);
+
+//   //pagination
+//   let page = 1;
+//   let skip = 0;
+//   let limit = 1;
+//   if (query.limit) {
+//     limit = Number(query.limit);
+//   }
+
+//   if (query.page) {
+//     page = Number(query.page);
+//     skip = (page - 1) * limit;
+//   }
+
+//   const paginateQuery = sortQuery.skip(skip);
+
+//   //limit
+//   const limitQuery = await paginateQuery.limit(limit);
+
+//   return limitQuery;
+// };
